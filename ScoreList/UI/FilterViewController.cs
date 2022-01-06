@@ -116,68 +116,52 @@ namespace ScoreList.UI {
         }
 
         private Filter TryCreateFilter() {
-            // messy
+            // less messy
+            Filter currentFilter = null;
             switch (filterChoice) {
                 case "Stars":
-                    float? starsMaximum = null;
-                    if (filterStarsMaximum.Value != 14f) starsMaximum = filterStarsMaximum.Value;
-
-                    float? starsMinimum = null;
-                    if (filterStarsMinimum.Value != 0f) starsMinimum = filterStarsMinimum.Value;
+                    float? starsMaximum = filterStarsMaximum.Value != maxStars ? filterStarsMaximum.Value : null;
+                    float? starsMinimum = filterStarsMinimum != 0 ? filterStarsMinimum.Value : null;
 
                     if (starsMaximum != null || starsMinimum != null)
-                        return new StarsFilter(starsMinimum, starsMaximum);
+                        currentFilter = new StarsFilter(starsMinimum, starsMaximum);
                     break;
 
                 case "Date":
-                    int? dateAfterMonth = null;
-                    int? dateAfterYear = null;
+                    int? dateAfterMonth = filterDateAfterMonth.Value != 1 ? (int)filterDateAfterMonth.Value : null;
+                    int? dateAfterYear = filterDateAfterYear.Value != 2018 ? (int)filterDateAfterYear.Value : null;
 
-                    if (filterDateAfterMonth.Value != 1) dateAfterMonth = (int)filterDateAfterMonth.Value;
-                    if (filterDateAfterYear.Value != 2018) dateAfterYear = (int)filterDateAfterYear.Value;
+                    int? dateBeforeMonth = filterDateBeforeMonth.Value != maxMonth ? (int)filterDateBeforeMonth.Value : null;
+                    int? dateBeforeYear = filterDateBeforeYear.Value != maxYear ? (int)filterDateBeforeYear.Value : null;
 
-                    int? dateBeforeMonth = null;
-                    int? dateBeforeYear = null;
+                    string after = 
+                    (dateAfterMonth != null || dateAfterYear != null) ? after = $"{dateAfterYear ?? 2018}-{dateAfterMonth ?? 1}-1" : null;                  
 
-                    if (filterDateBeforeMonth.Value != 12) dateBeforeMonth = (int)filterDateBeforeMonth.Value;
-                    if (filterDateBeforeYear.Value != maxYear) dateBeforeYear = (int)filterDateBeforeYear.Value;
-
-                    string after = null;
-                    if (dateAfterMonth != null || dateAfterYear != null)
-                        after = $"{dateAfterYear ?? 2018}-{dateAfterMonth ?? 1}-1";
-
-                    string before = null;
-                    if (dateBeforeYear != null || dateBeforeMonth != null)
-                        before = $"{dateBeforeYear ?? 2018}-{dateBeforeMonth ?? 1}-1";
+                    string before = 
+                    (dateBeforeYear != null || dateBeforeMonth != null) ? before = $"{dateBeforeYear ?? 2018}-{dateBeforeMonth ?? 1}-1" : null;
 
                     if (after != null || before != null)
-                        return new DateFilter(after, before);
+                        currentFilter = new DateFilter(after, before);
                     break;
 
                 case "Misses":
-                    int? missesMaximum = null;
-                    if (filterMissesMaximum.Value != 100) missesMaximum = (int)filterMissesMaximum.Value;
-
-                    int? missesMinimum = null;
-                    if (filterMissesMinimum.Value != 0) missesMinimum = (int)filterMissesMinimum.Value;
+                    int? missesMaximum = filterMissesMaximum.Value != 100 ? (int)filterMissesMaximum.Value : null;
+                    int? missesMinimum = filterMissesMinimum.Value != 0 ? (int)filterMissesMinimum.Value : null;
 
                     if (missesMaximum != null || missesMinimum != null)
-                        return new MissesFilter(missesMinimum, missesMaximum);
+                        currentFilter = new MissesFilter(missesMinimum, missesMaximum);
                     break;
 
                 case "Accuracy":
-                    float? accuracyMinimum = null;
-                    if (filterAccuracyMinimum.Value != 0f) accuracyMinimum = filterAccuracyMinimum.Value;
-
-                    float? accuracyMaximum = null;
-                    if (filterAccuracyMaximum.Value != 100f) accuracyMaximum = filterAccuracyMaximum.Value;
+                    float? accuracyMinimum = filterAccuracyMinimum.Value != 0f ? filterAccuracyMinimum.Value : null;
+                    float? accuracyMaximum = filterAccuracyMaximum.Value != 100f ? filterAccuracyMaximum.Value;
 
                     if (accuracyMaximum != null || accuracyMinimum != null)
-                        return new AccuracyFilter(accuracyMinimum, accuracyMaximum);
+                        currentFilter = new AccuracyFilter(accuracyMinimum, accuracyMaximum);
                     break;
             }
 
-            return null;
+            return currentFilter;
         }
 
         [UIAction("CreateFilter")]
@@ -189,11 +173,8 @@ namespace ScoreList.UI {
             if (filter == null) return;
 
             var (start, end) = filter.GetValues();
-            string value;
-
-            if (start != null && end == null) value = $"Bigger {start}";
-            else if (start == null && end != null) value = $"Smaller {end}";
-            else value = $"Bigger {start} Smaller {end}";
+            string value =
+            ((start == null || end == null) ? (start != null ? $"Bigger {start}" : $"Smaller {end}") : $"Bigger {start] Smaller {end}");
 
             var wrapper = new FilterListCellWrapper(this, filterChoice, value);
 
@@ -232,6 +213,13 @@ namespace ScoreList.UI {
             "Misses",
             "Date"
         };
+        public Enum FilterTypes
+        {
+            Stars,
+            Accuracy,
+            Misses,
+            Date
+        }
 
         [UIValue("filter-choices")]
         public List<object> filterChoices => _filterChoices.Cast<object>().ToList();
